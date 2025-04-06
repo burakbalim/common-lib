@@ -1,0 +1,3 @@
+com/thales/common/config/FeignClientInterceptor.class
+com/thales/common/CommonLibAutoConfiguration.class
+com/thales/common/config/OpenApiConfig.class
