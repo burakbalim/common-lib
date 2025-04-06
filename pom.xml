@@ -6,8 +6,16 @@
 
 	<artifactId>common-lib</artifactId>
 	<name>common-lib</name>
-	<version>0.0.1</version>
+	<version>0.0.1-SNAPSHOT</version>
 	<description>Common Library with shared configurations</description>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/burakbalim/common-lib</url>
+		</repository>
+	</distributionManagement>
 
 	<parent>
 		<groupId>com.thales</groupId>
@@ -96,23 +104,11 @@
 	<repositories>
 		<repository>
 			<id>github</id>
-			<name>GitHub burakbalim Packages</name>
 			<url>https://maven.pkg.github.com/burakbalim/common-parent-lib</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
 	</repositories>
-
-	<distributionManagement>
-		<repository>
-			<id>github</id>
-			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/burakbalim/common-lib</url>
-		</repository>
-	</distributionManagement>
 
 </project>
