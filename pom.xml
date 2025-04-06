@@ -7,7 +7,7 @@
 		<groupId>com.thales</groupId>
 		<artifactId>common-parent-lib</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath/> <!-- Boş bırak, Maven local ya da remote repodan baksın -->
+		<relativePath/>
 	</parent>
 
 
@@ -106,5 +106,12 @@
 		</repository>
 	</repositories>
 
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/burakbalim/common-lib</url>
+		</repository>
+	</distributionManagement>
 
 </project>
