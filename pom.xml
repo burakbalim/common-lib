@@ -7,6 +7,7 @@
 		<groupId>com.thales</groupId>
 		<artifactId>common-parent-lib</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath/> <!-- Boş bırak, Maven local ya da remote repodan baksın -->
 	</parent>
 
 	<artifactId>common-lib</artifactId>
