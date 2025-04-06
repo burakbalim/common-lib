@@ -3,26 +3,17 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-
-	<artifactId>common-lib</artifactId>
-	<name>common-lib</name>
-	<version>0.0.1-SNAPSHOT</version>
-	<description>Common Library with shared configurations</description>
-
-	<distributionManagement>
-		<repository>
-			<id>github</id>
-			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/burakbalim/common-lib</url>
-		</repository>
-	</distributionManagement>
-
 	<parent>
 		<groupId>com.thales</groupId>
 		<artifactId>common-parent-lib</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath/>
 	</parent>
+
+	<artifactId>common-lib</artifactId>
+	<name>common-lib</name>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>Common Library with shared configurations</description>
 
 	<dependencies>
 		<!-- Spring Boot dependencies -->
@@ -110,5 +101,13 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/burakbalim/common-parent-lib</url>
+		</repository>
+	</distributionManagement>
 
 </project>
