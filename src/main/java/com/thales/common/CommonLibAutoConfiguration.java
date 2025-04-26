@@ -4,11 +4,11 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Common lib için otomatik yapılandırma sınıfı
- * Spring Boot auto-configuration için kullanılacak
+ * Auto-configuration class for common lib
+ * Used for Spring Boot auto-configuration
  */
 @Configuration
 @ComponentScan(basePackages = "com.thales.common")
 public class CommonLibAutoConfiguration {
-    // Auto-configuration için boş sınıf, component scan yeterli
+    // Empty class for auto-configuration, component scan is sufficient
 } 

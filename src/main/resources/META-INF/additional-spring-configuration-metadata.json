@@ -1,0 +1,100 @@
+{
+  "properties": [
+    {
+      "name": "thales.cache.type",
+      "type": "com.thales.common.cache.CacheType",
+      "description": "Cache type (IN_MEMORY, REDIS, NONE)",
+      "defaultValue": "IN_MEMORY"
+    },
+    {
+      "name": "thales.cache.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether the cache feature is enabled",
+      "defaultValue": true
+    },
+    {
+      "name": "thales.cache.ttl",
+      "type": "java.util.Map<java.lang.String, java.time.Duration>",
+      "description": "Custom TTL durations for each cache"
+    },
+    {
+      "name": "thales.cache.in-memory.maximum-size",
+      "type": "java.lang.Long",
+      "description": "Maximum number of items for in-memory cache",
+      "defaultValue": 1000
+    },
+    {
+      "name": "thales.cache.in-memory.default-ttl",
+      "type": "java.time.Duration",
+      "description": "Default TTL duration for in-memory cache",
+      "defaultValue": "10m"
+    },
+    {
+      "name": "thales.cache.in-memory.expire-after-write",
+      "type": "java.time.Duration",
+      "description": "Duration for cache items to expire after write",
+      "defaultValue": "10m"
+    },
+    {
+      "name": "thales.cache.in-memory.expire-after-access",
+      "type": "java.time.Duration",
+      "description": "Duration for cache items to expire after last access",
+      "defaultValue": "10m"
+    },
+    {
+      "name": "thales.cache.redis.default-ttl",
+      "type": "java.time.Duration",
+      "description": "Default TTL duration for Redis cache",
+      "defaultValue": "30m"
+    },
+    {
+      "name": "thales.cache.redis.key-prefix",
+      "type": "java.lang.String",
+      "description": "Prefix for Redis cache keys"
+    },
+    {
+      "name": "thales.cache.redis.use-app-name-as-prefix",
+      "type": "java.lang.Boolean",
+      "description": "Whether to use application name as a prefix for cache keys",
+      "defaultValue": true
+    },
+    {
+      "name": "thales.cache.redis.serialization-format",
+      "type": "java.lang.String",
+      "description": "Redis serialization format (JDK, JSON)",
+      "defaultValue": "JDK"
+    }
+  ],
+  "hints": [
+    {
+      "name": "thales.cache.type",
+      "values": [
+        {
+          "value": "IN_MEMORY",
+          "description": "Uses Caffeine for in-JVM caching"
+        },
+        {
+          "value": "REDIS",
+          "description": "Uses Redis database for distributed caching"
+        },
+        {
+          "value": "NONE",
+          "description": "Caching is disabled"
+        }
+      ]
+    },
+    {
+      "name": "thales.cache.redis.serialization-format",
+      "values": [
+        {
+          "value": "JDK",
+          "description": "JDK serialization (default)"
+        },
+        {
+          "value": "JSON",
+          "description": "JSON serialization (more readable, slower)"
+        }
+      ]
+    }
+  ]
+} 
