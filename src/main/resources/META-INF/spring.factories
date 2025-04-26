@@ -1,2 +1,4 @@
+# Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.thales.common.CommonLibAutoConfiguration 
+com.thales.common.CommonLibAutoConfiguration,\
+com.thales.common.cache.CacheAutoConfiguration 
