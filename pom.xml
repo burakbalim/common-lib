@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>com.thales</groupId>
 		<artifactId>common-parent-lib</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.2-SNAPSHOT</version>
 		<relativePath/>
 	</parent>
 
 	<artifactId>common-lib</artifactId>
 	<name>common-lib</name>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.8-SNAPSHOT</version>
 	<description>Common Library with shared configurations</description>
 
 	<dependencies>
