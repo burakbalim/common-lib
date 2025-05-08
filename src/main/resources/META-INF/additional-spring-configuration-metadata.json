@@ -63,6 +63,18 @@
       "type": "java.lang.String",
       "description": "Redis serialization format (JDK, JSON)",
       "defaultValue": "JDK"
+    },
+    {
+      "name": "thales.redis.max-idle",
+      "type": "java.lang.Integer",
+      "description": "Maximum number of idle connections in the Redis pool",
+      "defaultValue": 8
+    },
+    {
+      "name": "thales.url.base",
+      "type": "java.lang.String",
+      "description": "Base URL for the application (e.g. www.wordflashy.com, staging.wordflashy.com)",
+      "defaultValue": "localhost"
     }
   ],
   "hints": [

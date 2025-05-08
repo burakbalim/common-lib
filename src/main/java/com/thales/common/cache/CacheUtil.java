@@ -1,49 +1,37 @@
 package com.thales.common.cache;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.NoOpCache;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
-import java.util.Optional;
 
 /**
- * Utility class containing helper methods for cache operations.
+ * Utility class for cache operations to be used as a Spring bean.
+ * For static access to cache operations, use the StaticCacheUtil class.
  */
+@Component
 public final class CacheUtil {
+    
+    private final CacheManager cacheManager;
 
-    private CacheUtil() {
-        // Utility class, should not be instantiated
+    @Autowired
+    public CacheUtil(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+        // Register the cacheManager with the static utility class
+        StaticCacheUtil.setCacheManager(cacheManager);
     }
 
     /**
-     * Clears all caches in the specified cache manager.
-     *
-     * @param cacheManager the cache manager to be cleared
+     * Clears a specific cache by name.
+     * 
+     * @param cacheName the name of the cache to clear
      */
-    public static void clearAllCaches(CacheManager cacheManager) {
-        if (cacheManager == null) return;
-        
-        Collection<String> cacheNames = cacheManager.getCacheNames();
-        if (cacheNames != null) {
-            cacheNames.forEach(cacheName -> {
-                Cache cache = cacheManager.getCache(cacheName);
-                if (cache != null) {
-                    cache.clear();
-                }
-            });
-        }
-    }
-
-    /**
-     * Clears a specific cache in the specified cache manager.
-     *
-     * @param cacheManager the cache manager containing the cache
-     * @param cacheName    the name of the cache to be cleared
-     */
-    public static void clearCache(CacheManager cacheManager, String cacheName) {
+    public void clear(String cacheName) {
         if (cacheManager == null || cacheName == null) return;
-        
+
         Cache cache = cacheManager.getCache(cacheName);
         if (cache != null) {
             cache.clear();
@@ -51,15 +39,29 @@ public final class CacheUtil {
     }
 
     /**
-     * Removes an item from the specified cache.
-     *
-     * @param cacheManager the cache manager to operate on
-     * @param cacheName    the name of the cache to operate on
-     * @param key          the key of the item to be removed
+     * Clears all caches managed by the cache manager.
      */
-    public static void evictFromCache(CacheManager cacheManager, String cacheName, Object key) {
+    public void clearAll() {
+        if (cacheManager == null) return;
+
+        Collection<String> cacheNames = cacheManager.getCacheNames();
+        cacheNames.forEach(cacheName -> {
+            Cache cache = cacheManager.getCache(cacheName);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
+    }
+
+    /**
+     * Removes a specific entry from a cache.
+     * 
+     * @param cacheName the name of the cache
+     * @param key the key to remove
+     */
+    public void evict(String cacheName, Object key) {
         if (cacheManager == null || cacheName == null || key == null) return;
-        
+
         Cache cache = cacheManager.getCache(cacheName);
         if (cache != null) {
             cache.evict(key);
@@ -67,37 +69,55 @@ public final class CacheUtil {
     }
 
     /**
-     * Reads a value from the specified cache.
-     *
-     * @param cacheManager the cache manager to operate on
-     * @param cacheName    the name of the cache to operate on
-     * @param key          the key of the item to be read
-     * @param type         the type of the return value
-     * @param <T>          the type of the return value
-     * @return the value from the cache or an empty optional
+     * Retrieves a value from a cache.
+     * 
+     * @param <T> the type of value to retrieve
+     * @param cacheName the name of the cache
+     * @param key the key to look up
+     * @param type the expected type of the value
+     * @return the value if found and of the correct type, or null
      */
-    public static <T> Optional<T> getFromCache(CacheManager cacheManager, String cacheName, Object key, Class<T> type) {
-        if (cacheManager == null || cacheName == null || key == null) return Optional.empty();
-        
+    public <T> T get(String cacheName, Object key, Class<T> type) {
+        if (cacheManager == null || cacheName == null || key == null) return null;
+
         Cache cache = cacheManager.getCache(cacheName);
         if (cache != null) {
-            T value = cache.get(key, type);
-            return Optional.ofNullable(value);
+            Cache.ValueWrapper valueWrapper = cache.get(key);
+            if (valueWrapper != null && valueWrapper.get() != null) {
+                Object value = valueWrapper.get();
+                if (type.isInstance(value)) {
+                    return type.cast(value);
+                }
+            }
         }
-        return Optional.empty();
+        return null;
     }
 
     /**
-     * Writes a value to the specified cache.
-     *
-     * @param cacheManager the cache manager to operate on
-     * @param cacheName    the name of the cache to operate on
-     * @param key          the key of the item to be written
-     * @param value        the value to be written
+     * Retrieves a value from a cache with a default fallback.
+     * 
+     * @param <T> the type of value to retrieve
+     * @param cacheName the name of the cache
+     * @param key the key to look up
+     * @param type the expected type of the value
+     * @param defaultValue the default value to return if not found
+     * @return the cached value if found, or the default value
      */
-    public static void putToCache(CacheManager cacheManager, String cacheName, Object key, Object value) {
+    public <T> T getWithDefault(String cacheName, Object key, Class<T> type, T defaultValue) {
+        T value = get(cacheName, key, type);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * Stores a value in a cache.
+     * 
+     * @param cacheName the name of the cache
+     * @param key the key to store under
+     * @param value the value to store
+     */
+    public void put(String cacheName, Object key, Object value) {
         if (cacheManager == null || cacheName == null || key == null) return;
-        
+
         Cache cache = cacheManager.getCache(cacheName);
         if (cache != null) {
             cache.put(key, value);
@@ -106,21 +126,27 @@ public final class CacheUtil {
 
     /**
      * Checks if caching is enabled.
-     * Cache is not enabled if it's of type NoOpCache or null.
-     *
-     * @param cacheManager the cache manager to check
-     * @return whether caching is enabled
+     * 
+     * @return true if caching is enabled and available, false otherwise
      */
-    public static boolean isCacheEnabled(CacheManager cacheManager) {
+    public boolean isCacheEnabled() {
         if (cacheManager == null) return false;
-        
+
         Collection<String> cacheNames = cacheManager.getCacheNames();
         if (cacheNames == null || cacheNames.isEmpty()) return false;
-        
-        // Get a sample cache name and check it
+
         String sampleCacheName = cacheNames.iterator().next();
         Cache cache = cacheManager.getCache(sampleCacheName);
-        
+
         return cache != null && !(cache instanceof NoOpCache);
     }
-} 
+    
+    /**
+     * Gets the underlying CacheManager.
+     * 
+     * @return the CacheManager
+     */
+    public CacheManager getCacheManager() {
+        return cacheManager;
+    }
+}

@@ -7,6 +7,7 @@ This library contains common code and configurations used in microservice projec
 - Swagger/OpenAPI configuration
 - Feign Client configuration
 - Spring Boot auto-configuration
+- Caching infrastructure
 
 ## Usage
 
@@ -16,7 +17,7 @@ To use this library, add the following dependency to your pom.xml file:
 <dependency>
     <groupId>com.thales</groupId>
     <artifactId>common-lib</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.3-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -55,139 +56,265 @@ cd common-parent-lib
 mvn clean install
 ```
 
-## Cache Provider Usage
+# Thales Cache Library
 
-The Cache Provider in the Common Library provides two different caching mechanisms for microservices: In-memory (Caffeine) and Redis.
+This module provides a common caching infrastructure for microservices. It is designed for Spring Boot applications and supports Redis or Caffeine cache providers.
 
-### Dependencies
+## Features
 
-The Cache Provider includes these dependencies:
-- `spring-boot-starter-cache`: Spring Cache infrastructure
-- `caffeine`: In-memory cache support (default)
-- `spring-boot-starter-data-redis`: Redis cache support (optional)
+- Spring Cache integration
+- Support for different cache providers (Redis, Caffeine)
+- Two usage options:
+  - `CacheUtil`: For use with dependency injection as a Spring Bean
+  - `StaticCacheUtil`: For static access from anywhere
 
-### Configuration
+## Installation
 
-The Cache Provider provides automatic configuration and can be used in microservices without writing additional code.
+To use in microservices, add the common-lib dependency to your `pom.xml` file:
 
-#### Application Configuration Example (application.yml)
+```xml
+<dependency>
+    <groupId>com.thales</groupId>
+    <artifactId>common-lib</artifactId>
+    <version>0.0.2-SNAPSHOT</version>
+</dependency>
+```
+
+## Configuration
+
+Configure cache properties in your `application.properties` or `application.yml` file using the following settings:
+
+```yaml
+thales:
+  cache:
+    enabled: true                   # Enable/disable caching (default: true)
+    type: REDIS                     # Cache type: REDIS or IN_MEMORY (default: IN_MEMORY)
+    
+    # Redis cache configuration
+    redis:
+      defaultTtl: 3600000           # Default TTL in ms (default: 1 hour)
+      useAppNameAsPrefix: true      # Add application name as prefix to cache keys (default: true)
+      keyPrefix: ""                 # Additional cache key prefix (default: empty)
+      serializationFormat: JSON     # Serialization format: JSON or JDK (default: JDK)
+    
+    # In-memory (Caffeine) cache configuration
+    inMemory:
+      maximumSize: 10000            # Maximum number of cache entries (default: 10000)
+      expireAfterWrite: 3600000     # Expiration time after write in ms (default: 1 hour)
+      expireAfterAccess: 3600000    # Expiration time after access in ms (default: 1 hour)
+    
+    # Custom TTL settings (per cache name)
+    ttl:
+      users: 86400000               # TTL for users cache in ms (1 day)
+      products: 3600000             # TTL for products cache in ms (1 hour)
+      tempUsers: 1800000            # TTL for temporary users in ms (30 minutes)
+```
+
+## Cache Yapılandırması
+
+Cache yapılandırması `thales.cache` ve `thales.redis` önekleri altında yapılabilir. Örnek yapılandırma:
 
 ```yaml
 thales:
   cache:
     enabled: true
-    # Cache type: IN_MEMORY, REDIS, or NONE
-    type: IN_MEMORY
-    
-    # Custom TTL durations for each cache (optional)
+    type: REDIS  # veya IN_MEMORY
     ttl:
-      userCache: 30m
-      productCache: 10m
-    
-    # In-memory (Caffeine) cache configuration
-    in-memory:
-      maximum-size: 1000
-      default-ttl: 10m
-      expire-after-write: 10m
-      expire-after-access: 10m
-    
-    # Redis cache configuration
-    redis:
-      default-ttl: 30m
-      key-prefix: myapp
-      use-app-name-as-prefix: true
-      serialization-format: JDK # or JSON
-```
-
-For Redis usage, you also need to configure Spring Redis connection settings:
-
-```yaml
-spring:
+      userCache: 1h
+      tokenCache: 30m
   redis:
     host: localhost
     port: 6379
-    password: password
+    password: şifre  # isteğe bağlı
+    database: 0
+    timeout: 2000
 ```
 
-### Usage Example
+### Cache Tipleri
 
-1. **Using Spring Cache Annotations**
+- `IN_MEMORY`: Caffeine önbelleği kullanır (varsayılan)
+- `REDIS`: Redis önbelleği kullanır, performans ve dağıtık senaryolar için idealdir
+
+### Uygulama Kodu ile Kullanım
+
+Cache işlemlerini StaticCacheUtil veya CacheUtil ile yapabilirsiniz:
 
 ```java
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.stereotype.Service;
+// Static kullanım
+StaticCacheUtil.put("userCache", userId, userObject);
+Optional<User> user = StaticCacheUtil.get("userCache", userId, User.class);
 
+// Dependency injection ile kullanım
+@Autowired
+private CacheUtil cacheUtil;
+
+public void methodExample() {
+    cacheUtil.put("userCache", userId, userObject);
+    User user = cacheUtil.get("userCache", userId, User.class);
+}
+```
+
+## Usage Examples
+
+### 1. Using with Dependency Injection (Recommended)
+
+```java
 @Service
+@RequiredArgsConstructor
 public class UserService {
-
-    @Cacheable(value = "userCache", key = "#userId")
-    public User getUserById(String userId) {
-        // Get user from database
+    private final CacheUtil cacheUtil;
+    
+    private static final String USER_CACHE = "users";
+    
+    public void saveUser(User user) {
+        // Business logic...
+        
+        // Save user to cache
+        cacheUtil.put(USER_CACHE, user.getId(), user);
     }
     
-    @CacheEvict(value = "userCache", key = "#user.id")
-    public void updateUser(User user) {
-        // Update user
+    public User getUser(String userId) {
+        // Get user from cache
+        User cachedUser = cacheUtil.get(USER_CACHE, userId, User.class);
+        
+        if (cachedUser != null) {
+            return cachedUser;
+        }
+        
+        // If not in cache, get from database
+        User user = userRepository.findById(userId);
+        
+        if (user != null) {
+            // Add user to cache
+            cacheUtil.put(USER_CACHE, userId, user);
+        }
+        
+        return user;
+    }
+    
+    public void deleteUser(String userId) {
+        // Business logic...
+        
+        // Remove user from cache
+        cacheUtil.evict(USER_CACHE, userId);
     }
 }
 ```
 
-2. **Programmatic Usage**
+### 2. Using with Static Access
 
 ```java
-import com.thales.common.cache.CacheUtil;
-import org.springframework.cache.CacheManager;
-import org.springframework.stereotype.Service;
+import com.thales.common.cache.StaticCacheUtil;
 
-@Service
-public class UserService {
-    private final CacheManager cacheManager;
+public class AuthenticationHelper {
     
-    public UserService(CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
+    private static final String TOKEN_CACHE = "tokens";
+    
+    public static void storeToken(String userId, String token) {
+        StaticCacheUtil.put(TOKEN_CACHE, userId, token);
     }
     
-    public User getUserById(String userId) {
-        // Try reading from cache
-        return CacheUtil.getFromCache(cacheManager, "userCache", userId, User.class)
-                .orElseGet(() -> {
-                    // Get from database if not in cache
-                    User user = fetchUserFromDatabase(userId);
-                    
-                    // Save to cache
-                    CacheUtil.putToCache(cacheManager, "userCache", userId, user);
-                    return user;
-                });
+    public static Optional<String> getToken(String userId) {
+        return StaticCacheUtil.get(TOKEN_CACHE, userId, String.class);
     }
     
-    public void clearUserCache(String userId) {
-        CacheUtil.evictFromCache(cacheManager, "userCache", userId);
-    }
-    
-    public void clearAllUserCaches() {
-        CacheUtil.clearCache(cacheManager, "userCache");
+    public static void invalidateToken(String userId) {
+        StaticCacheUtil.evict(TOKEN_CACHE, userId);
     }
 }
 ```
 
-### Changing Cache Type
+## Available Methods
 
-To change the cache type, you only need to update the configuration; no code changes are required.
+### CacheUtil (Bean)
 
-```yaml
-# Switching from in-memory cache to Redis
-thales:
-  cache:
-    type: REDIS
+- `clear(String cacheName)`: Clears the specified cache
+- `clearAll()`: Clears all caches
+- `evict(String cacheName, Object key)`: Removes the specified key from cache
+- `get(String cacheName, Object key, Class<T> type)`: Reads value from cache
+- `getWithDefault(String cacheName, Object key, Class<T> type, T defaultValue)`: Returns default value if not found
+- `put(String cacheName, Object key, Object value)`: Saves value to cache
+- `isCacheEnabled()`: Checks if caching is enabled
+- `getCacheManager()`: Returns the underlying CacheManager object
+
+### StaticCacheUtil (Static)
+
+- `clearAllCaches()`: Clears all caches
+- `clearCache(String cacheName)`: Clears the specified cache
+- `evict(String cacheName, Object key)`: Removes the specified key from cache
+- `get(String cacheName, Object key, Class<T> type)`: Reads value from cache (as Optional)
+- `getWithDefault(String cacheName, Object key, Class<T> type, T defaultValue)`: Returns default value if not found
+- `put(String cacheName, Object key, Object value)`: Saves value to cache
+- `isCacheEnabled()`: Checks if caching is enabled
+
+## Best Practices
+
+1. Use the `CacheUtil` bean whenever possible (with dependency injection)
+2. Static access should only be used for utility classes or when Spring context is not accessible
+3. Define all cache keys as constants
+4. Specify cache durations (TTL) in configuration files
+
+## Redis Auto-Configuration
+
+Bu kütüphane, Spring Boot'un varsayılan `RedisAutoConfiguration` sınıfını otomatik olarak devre dışı bırakır. Bu, uygulamanın kendi Redis yapılandırmasını oluşturmasına olanak tanır ve çakışan bean tanımlarını önler.
+
+CommonLibAutoConfiguration sınıfı, `@ImportAutoConfiguration(exclude = {RedisAutoConfiguration.class})` ve `@AutoConfigureBefore(RedisAutoConfiguration.class)` anotasyonları ile Spring Boot'un Redis auto-configuration mekanizmasını devre dışı bırakır.
+
+Bu sayede her mikroservis uygulamasında ayrı ayrı `@SpringBootApplication` anotasyonunda exclude etmeye gerek kalmaz.
+
+```java
+@SpringBootApplication(
+    // Bu exclude işlemini yapmaya gerek yok - common-lib bunu otomatik olarak hallediyor
+    /*exclude = {
+        RedisAutoConfiguration.class,
+        RedisRepositoriesAutoConfiguration.class
+    }*/
+)
+public class YourServiceApplication {
+    // ...
+}
 ```
 
-### Disabling Caching
+## URL Utility Class (URLUtil)
 
-To temporarily disable caching:
+This library includes a `URLUtil` class for managing URLs in applications. This class is used to read and manage URLs from the configuration file (application.yml or application.properties).
+
+### Configuration
 
 ```yaml
 thales:
-  cache:
-    enabled: false
-``` 
+  url:
+    base: www.wordflashy.com  # Base URL (e.g. www.wordflashy.com, staging.wordflashy.com)
+```
+
+### Usage
+
+```java
+@RestController
+@RequiredArgsConstructor
+public class WebController {
+
+    private final URLUtil urlUtil;
+
+    @GetMapping("/redirect")
+    public ResponseEntity<Void> redirect() {
+        // Get the base URL
+        String baseUrl = urlUtil.getBaseUrl();
+        
+        // Create a full URL with a specific path
+        String fullUrl = urlUtil.buildUrl("/login");
+        
+        // Redirect
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", fullUrl)
+                .build();
+    }
+}
+```
+
+For static URL concatenation:
+
+```java
+String fullUrl = URLUtil.buildUrl("https://www.wordflashy.com", "/api/v1/users");
+// Result: https://www.wordflashy.com/api/v1/users
+```
