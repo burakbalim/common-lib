@@ -1,5 +1,6 @@
 package com.thales.common.cache;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -12,9 +13,15 @@ import java.util.Collection;
  * Utility class for cache operations to be used as a Spring bean.
  * For static access to cache operations, use the StaticCacheUtil class.
  */
+@Getter
 @Component
 public final class CacheUtil {
-    
+
+    /**
+     * -- GETTER --
+     *  Gets the underlying CacheManager.
+     *
+     */
     private final CacheManager cacheManager;
 
     @Autowired
@@ -26,7 +33,7 @@ public final class CacheUtil {
 
     /**
      * Clears a specific cache by name.
-     * 
+     *
      * @param cacheName the name of the cache to clear
      */
     public void clear(String cacheName) {
@@ -55,7 +62,7 @@ public final class CacheUtil {
 
     /**
      * Removes a specific entry from a cache.
-     * 
+     *
      * @param cacheName the name of the cache
      * @param key the key to remove
      */
@@ -70,7 +77,7 @@ public final class CacheUtil {
 
     /**
      * Retrieves a value from a cache.
-     * 
+     *
      * @param <T> the type of value to retrieve
      * @param cacheName the name of the cache
      * @param key the key to look up
@@ -95,7 +102,7 @@ public final class CacheUtil {
 
     /**
      * Retrieves a value from a cache with a default fallback.
-     * 
+     *
      * @param <T> the type of value to retrieve
      * @param cacheName the name of the cache
      * @param key the key to look up
@@ -110,7 +117,7 @@ public final class CacheUtil {
 
     /**
      * Stores a value in a cache.
-     * 
+     *
      * @param cacheName the name of the cache
      * @param key the key to store under
      * @param value the value to store
@@ -126,7 +133,7 @@ public final class CacheUtil {
 
     /**
      * Checks if caching is enabled.
-     * 
+     *
      * @return true if caching is enabled and available, false otherwise
      */
     public boolean isCacheEnabled() {
@@ -140,13 +147,5 @@ public final class CacheUtil {
 
         return cache != null && !(cache instanceof NoOpCache);
     }
-    
-    /**
-     * Gets the underlying CacheManager.
-     * 
-     * @return the CacheManager
-     */
-    public CacheManager getCacheManager() {
-        return cacheManager;
-    }
+
 }

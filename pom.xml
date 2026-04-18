@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>com.thales</groupId>
 		<artifactId>common-parent-lib</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.12-SNAPSHOT</version>
 		<relativePath/>
 	</parent>
 
 	<artifactId>common-lib</artifactId>
 	<name>common-lib</name>
-	<version>0.0.8-SNAPSHOT</version>
+	<version>0.0.12-SNAPSHOT</version>
 	<description>Common Library with shared configurations</description>
 
 	<dependencies>
@@ -40,11 +40,12 @@
 			<artifactId>postgresql</artifactId>
 		</dependency>
 
-		<!-- For Hibernate JSONB -->
-		<dependency>
-			<groupId>com.vladmihalcea</groupId>
-			<artifactId>hibernate-types-60</artifactId>
-		</dependency>
+
+        <dependency>
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-63</artifactId>
+            <version>3.14.1</version>
+        </dependency>
 
 		<!-- MapStruct -->
 		<dependency>
