@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +27,6 @@ import java.time.Duration;
 @Configuration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(RedisProperties.class)
-@ConditionalOnClass(name = "org.springframework.data.redis.connection.RedisConnectionFactory")
 @ConditionalOnProperty(name = "thales.cache.type", havingValue = "REDIS")
 public class RedisConnectionConfiguration {
 
