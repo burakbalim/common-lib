@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>com.thales</groupId>
 		<artifactId>common-parent-lib</artifactId>
-		<version>0.0.12-SNAPSHOT</version>
+		<version>0.0.13-SNAPSHOT</version>
 		<relativePath/>
 	</parent>
 
 	<artifactId>common-lib</artifactId>
 	<name>common-lib</name>
-	<version>0.0.12-SNAPSHOT</version>
+	<version>0.0.13-SNAPSHOT</version>
 	<description>Common Library with shared configurations</description>
 
 	<dependencies>
@@ -94,6 +94,18 @@
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
 			<optional>true</optional>
+		</dependency>
+
+		<!-- Distributed tracing — Brave bridge populates MDC with traceId/spanId -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+		</dependency>
+
+		<!-- Propagates trace context through Feign client calls -->
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-micrometer</artifactId>
 		</dependency>
 
 		<!-- Test dependencies -->
