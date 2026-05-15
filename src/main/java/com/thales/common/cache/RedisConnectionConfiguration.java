@@ -56,37 +56,33 @@ public class RedisConnectionConfiguration {
         return new LettuceConnectionFactory(redisConfig, clientConfig);
     }
 
-    @Configuration
-    protected static class RedisTemplateConfiguration {
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
 
-        @Bean
-        public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-            RedisTemplate<String, Object> template = new RedisTemplate<>();
-            template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
 
-            template.setKeySerializer(new StringRedisSerializer());
-            template.setHashKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(jsonRedisSerializer());
+        template.setHashValueSerializer(jsonRedisSerializer());
 
-            template.setValueSerializer(jsonRedisSerializer());
-            template.setHashValueSerializer(jsonRedisSerializer());
+        template.afterPropertiesSet();
+        return template;
+    }
 
-            template.afterPropertiesSet();
-            return template;
-        }
-
-        @Bean
-        public GenericJackson2JsonRedisSerializer jsonRedisSerializer() {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
-            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            objectMapper.activateDefaultTyping(
-                    objectMapper.getPolymorphicTypeValidator(),
-                    ObjectMapper.DefaultTyping.NON_FINAL,
-                    JsonTypeInfo.As.PROPERTY
-            );
-            return new GenericJackson2JsonRedisSerializer(objectMapper);
-        }
+    @Bean
+    public GenericJackson2JsonRedisSerializer jsonRedisSerializer() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        objectMapper.activateDefaultTyping(
+                objectMapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+        return new GenericJackson2JsonRedisSerializer(objectMapper);
     }
 }
