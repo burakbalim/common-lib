@@ -42,7 +42,13 @@ public class CacheAutoConfiguration {
         cacheManager.setCaffeine(caffeine);
 
         if (cacheProperties.getTtl() != null && !cacheProperties.getTtl().isEmpty()) {
-            cacheManager.setCacheNames(cacheProperties.getTtl().keySet());
+            cacheProperties.getTtl().forEach((cacheName, ttl) ->
+                cacheManager.registerCustomCache(cacheName,
+                    Caffeine.newBuilder()
+                        .maximumSize(cacheProperties.getInMemory().getMaximumSize())
+                        .expireAfterWrite(ttl)
+                        .build())
+            );
         }
 
         return cacheManager;

@@ -11,7 +11,6 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.env.Environment;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -34,7 +33,6 @@ import java.util.Map;
 public class RedisCacheManagerConfiguration {
 
     private final CacheProperties cacheProperties;
-    private final Environment environment;
 
     @Primary
     @Bean(name = "cacheManager")
@@ -48,17 +46,6 @@ public class RedisCacheManagerConfiguration {
             cacheProperties.getTtl().forEach((cacheName, ttl) ->
                     cacheConfigurations.put(cacheName, createRedisCacheConfiguration(ttl)));
         }
-
-        String prefix = "";
-        if (cacheProperties.getRedis().isUseAppNameAsPrefix()
-                && environment.getProperty("spring.application.name") != null) {
-            prefix = environment.getProperty("spring.application.name") + "::";
-        }
-        if (!cacheProperties.getRedis().getKeyPrefix().isEmpty()) {
-            prefix = prefix + cacheProperties.getRedis().getKeyPrefix() + "::";
-        }
-
-        log.info("Redis cache manager prefix: {}", prefix);
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(createRedisCacheConfiguration(cacheProperties.getRedis().getDefaultTtl()))
