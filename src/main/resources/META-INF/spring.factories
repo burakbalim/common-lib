@@ -2,4 +2,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.thales.common.CommonLibAutoConfiguration,\
 com.thales.common.cache.CacheAutoConfiguration,\
-com.thales.common.cache.RedisConnectionConfiguration 
+com.thales.common.cache.RedisConnectionConfiguration,\
+com.thales.common.datasource.DataSourceConfig
