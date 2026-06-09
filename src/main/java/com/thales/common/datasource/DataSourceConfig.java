@@ -1,8 +1,10 @@
 package com.thales.common.datasource;
 
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariDataSource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -11,10 +13,12 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.Map;
 
+@Slf4j
 @Configuration
-@ConditionalOnProperty(name = "spring.datasource.replica.url")
+@ConditionalOnExpression("'${POSTGRES_REPLICA_HOST:}'.length() > 0")
 public class DataSourceConfig {
 
     @Bean
@@ -55,6 +59,18 @@ public class DataSourceConfig {
                 DataSourceType.REPLICA, replica
         ));
         routing.afterPropertiesSet();
+        // Warm up both pools immediately so the first requests don't pay pool-init cost.
+        warmUp("primary", primary);
+        warmUp("replica", replica);
         return new LazyConnectionDataSourceProxy(routing);
+    }
+
+    private void warmUp(String name, HikariDataSource ds) {
+        try (Connection c = ds.getConnection()) {
+            c.isValid(1);
+            log.info("DataSource warmup OK — pool={} total={}", name, ds.getHikariPoolMXBean().getTotalConnections());
+        } catch (Exception e) {
+            log.warn("DataSource warmup failed — pool={} : {}", name, e.getMessage());
+        }
     }
 }
